@@ -10,8 +10,10 @@ pub struct TokenInfo {
     pub price: u256,
 }
 
-#[derive(Drop, Serde, starknet::Event, starknet::Store)]
+#[derive(Drop, Serde, Copy, starknet::Event, starknet::Store)]
 pub struct ProjectProposal {
+    pub owner: ContractAddress,
+    pub proposal_id: u64,
     pub description: felt252,
     pub budget: u256,
     pub name: felt252,

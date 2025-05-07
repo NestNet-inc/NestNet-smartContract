@@ -18,9 +18,12 @@ pub trait INestnet<TContractState> {
         size: u256,
         Estimated_value: u256,
     ) -> u64;
+    fn get_all_proposals_by_owner(
+        self: @TContractState, proposer: ContractAddress
+    ) -> Option<Array<ProjectProposal>>;
     fn get_proposal(
         self: @TContractState, proposer: ContractAddress, proposal_id: u64,
-    ) -> ProjectProposal;
+    ) -> Option<ProjectProposal>;
     fn get_all_owner_proposal(ref self: TContractState);
     fn authenticate_user(ref self: TContractState, user: ContractAddress) -> bool;
     fn get_user(self: @TContractState, user: ContractAddress) -> User;

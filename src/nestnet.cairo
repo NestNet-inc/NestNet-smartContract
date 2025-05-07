@@ -4,15 +4,15 @@ pub mod Nestnet {
     use nestnet::interfaces::INestnet::INestnet;
     use nestnet::types::ProjectProposal;
     use starknet::storage::{
-        Map, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
-        StoragePointerWriteAccess,
+        Map, MutableVecTrait, StorageMapReadAccess, StorageMapWriteAccess, StoragePointerReadAccess,
+        StoragePointerWriteAccess, ValidStorageTypeTrait, Vec, VecTrait,
     };
     use starknet::{ContractAddress, contract_address_const, get_caller_address};
 
     #[storage]
     struct Storage {
         owner: ContractAddress,
-        owner_proposal: Map<(u64, ContractAddress), ProjectProposal>,
+        owner_proposal: Vec<ProjectProposal>,
         user: Map<ContractAddress, User>,
         proposal_id: u64,
     }
@@ -69,6 +69,8 @@ pub mod Nestnet {
             assert(user.isAuthenticated, 'User is not authenticated');
 
             let create_owner_proposal = ProjectProposal {
+                owner: owner,
+                proposal_id: proposal_id,
                 name: name,
                 description: description,
                 budget: budget,
@@ -81,12 +83,14 @@ pub mod Nestnet {
                 size: size,
                 Estimated_value: Estimated_value,
             };
-            self.owner_proposal.write((proposal_id, owner), create_owner_proposal);
+            self.owner_proposal.push(create_owner_proposal);
 
             self
                 .emit(
                     Event::ProjectProposal(
                         ProjectProposal {
+                            owner: owner,
+                            proposal_id: proposal_id,
                             name: name,
                             description: description,
                             budget: budget,
@@ -104,11 +108,69 @@ pub mod Nestnet {
 
             proposal_id
         }
+
+
         fn get_proposal(
             self: @ContractState, proposer: ContractAddress, proposal_id: u64,
-        ) -> ProjectProposal {
-            self.owner_proposal.read((proposal_id, proposer))
+        ) -> Option<ProjectProposal> {
+            let owner_proposal_count: u64 = self.owner_proposal.len();
+            
+            if owner_proposal_count == 0 {
+                return Option::None;
+            }
+            
+            // Iterate through all proposals
+            let mut i: u64 = 0;
+            while i < owner_proposal_count {
+                // Get the proposal at index i
+                let proposal: ProjectProposal = self.owner_proposal.at(i).read();
+
+                // Check if this is the proposal we're looking for
+                if proposal.proposal_id == proposal_id && proposal.owner == proposer {
+                    return Option::Some(proposal);
+                }
+
+                i += 1;
+            }
+
+            // If proposal not found, return None
+            Option::None
         }
+
+        fn get_all_proposals_by_owner(
+            self: @ContractState, proposer: ContractAddress
+        ) -> Option<Array<ProjectProposal>> {
+            let owner_proposal_count: u64 = self.owner_proposal.len();
+            
+            if owner_proposal_count == 0 {
+                return Option::None;
+            }
+            
+            let mut matching_proposals: Array<ProjectProposal> = ArrayTrait::new();
+            
+            // Iterate through all proposals
+            let mut i: u64 = 0;
+            while i < owner_proposal_count {
+                // Get the proposal at index i
+                let proposal: ProjectProposal = self.owner_proposal.at(i).read();
+                
+                // Check if this proposal belongs to the specified proposer
+                if proposal.owner == proposer {
+                    matching_proposals.append(proposal);
+                }
+                
+                i += 1;
+            }
+            
+            // Return None if no matching proposals were found
+            if matching_proposals.len() == 0 {
+                return Option::None;
+            }
+            
+            // Return the array of matching proposals
+            Option::Some(matching_proposals)
+        }
+
         fn get_user(self: @ContractState, user: ContractAddress) -> User {
             self.user.read(user)
         }

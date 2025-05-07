@@ -23,11 +23,7 @@ fn test_deployment_proposal() {
     let proposer = contract_address_const::<'proposer'>();
 
     let proposal = dispatcher.get_proposal(proposer, 43);
-    assert(proposal.budget == 0, 'deployment failed');
-    assert(proposal.amount_avaiable == 0, 'deployment failed');
-    assert(proposal.percentage_left == 0, 'deployment failed');
-    assert(proposal.percentage_used == 0, 'deployment failed');
-    assert(proposal.contract_signature == 0, 'deployment failed');
+    assert(proposal.is_none(), 'deployment failed');
 }
 
 #[test]
@@ -77,12 +73,15 @@ fn create_proposal() {
         );
 
     let proposal = dispatcher.get_proposal(user, proposal_id);
+    assert(proposal.is_some(), 'An error occurred');
 
-    assert(proposal.name == 'Michael', 'An error occurred');
-    assert(proposal.description == 'sapa riya', 'An error occurred');
-    assert(proposal.budget == 200, 'An error occurred');
-    assert(proposal.amount_avaiable == 40, 'An error occurred');
-    assert(proposal.Type == 'omo', 'An error occurred');
+    let found_proposal = proposal.unwrap();
+
+    assert(found_proposal.name == 'Michael', 'An error occurred');
+    assert(found_proposal.description == 'sapa riya', 'An error occurred');
+    assert(found_proposal.budget == 200, 'An error occurred');
+    assert(found_proposal.amount_avaiable == 40, 'An error occurred');
+    assert(found_proposal.Type == 'omo', 'An error occurred');
 }
 #[test]
 #[should_panic(expected: 'user is already authenticated')]
@@ -124,12 +123,135 @@ fn authenticate_user_twice() {
         );
 
     let proposal = dispatcher.get_proposal(user, proposal_id);
+    assert(proposal.is_some(), 'An error occurred');
 
-    assert(proposal.name == 'Michael', 'An error occurred');
-    assert(proposal.description == 'sapa riya', 'An error occurred');
-    assert(proposal.budget == 200, 'An error occurred');
-    assert(proposal.amount_avaiable == 40, 'An error occurred');
-    assert(proposal.Type == 'omo', 'An error occurred');
+    let found_proposal = proposal.unwrap();
+
+    assert(found_proposal.name == 'Michael', 'An error occurred');
+    assert(found_proposal.description == 'sapa riya', 'An error occurred');
+    assert(found_proposal.budget == 200, 'An error occurred');
+    assert(found_proposal.amount_avaiable == 40, 'An error occurred');
+    assert(found_proposal.Type == 'omo', 'An error occurred');
+}
+
+#[test]
+fn test_get_all_proposals_by_user() {
+    let (owner, contract_address, dispatcher) = setup();
+    let user = contract_address_const::<'user'>();
+
+    let name = 'Michael';
+    let description = 'sapa riya';
+    let budget = 200;
+    let amount_avaiable = 40;
+    let percentage_left = 20;
+    let percentage_used = 80;
+    let contract_signature = 'chainvfj';
+    let Location = 'Kano';
+    let Type = 'omo';
+    let size = 9;
+    let Estimated_value = 20;
+
+    start_cheat_caller_address(dispatcher.contract_address, owner);
+    dispatcher.authenticate_user(user);
+    stop_cheat_caller_address(dispatcher.contract_address);
+
+    start_cheat_caller_address(dispatcher.contract_address, user);
+    let proposal_id = dispatcher
+        .owner_proposal(
+            name.clone(),
+            description,
+            budget,
+            amount_avaiable,
+            percentage_left,
+            percentage_used,
+            contract_signature,
+            Location,
+            Type,
+            size,
+            Estimated_value,
+        );
+
+        let name1 = 'Michael';
+        let description1 = 'sapa riya';
+        let budget1 = 200;
+        let amount_avaiable1 = 40;
+        let percentage_left1 = 20;
+        let percentage_used1 = 80;
+        let contract_signature1 = 'chainvfj';
+        let Location1 = 'Kano';
+        let Type1 = 'omo';
+        let size1 = 9;
+        let Estimated_value1 = 20;
+
+        start_cheat_caller_address(dispatcher.contract_address, user);
+        let proposal_id1 = dispatcher
+            .owner_proposal(
+                name1,
+                description1,
+                budget1,
+                amount_avaiable1,
+                percentage_left1,
+                percentage_used1,
+                contract_signature1,
+                Location1,
+                Type1,
+                size1,
+                Estimated_value1,
+            ); 
+
+            let name2 = 'john';
+            let description2 = 'sapa riya';
+            let budget2 = 2000;
+            let amount_avaiable2 = 900;
+            let percentage_left2 = 20;
+            let percentage_used2 = 80;
+            let contract_signature2 = 'dgdgdg';
+            let Location2 = 'Kaduna';
+            let Type2 = 'omo0jkkkll';
+            let size2 = 19;
+            let Estimated_value2 = 200;
+
+            start_cheat_caller_address(dispatcher.contract_address, user);
+            let proposal_id2 = dispatcher
+                .owner_proposal(
+                    name2,
+                    description2,
+                    budget2,
+                    amount_avaiable2,
+                    percentage_left2,
+                    percentage_used2,
+                    contract_signature2,
+                    Location2,
+                    Type2,
+                    size2,
+                    Estimated_value2,
+                ); 
+                
+                
+    let proposal = dispatcher.get_all_proposals_by_owner(user);
+    assert(proposal.is_some(), 'An error occurred');
+
+    let found_proposal = proposal.unwrap();
+    // println!("The found proposal is {found_proposal}");
+
+    assert(found_proposal.at(0).name == @name, 'An error occurred');
+    assert(found_proposal.at(0).description == @description, 'An error occurred');
+    assert(found_proposal.at(0).budget == @budget, 'An error occurred');
+    assert(found_proposal.at(0).amount_avaiable == @amount_avaiable, 'An error occurred');
+    assert(found_proposal.at(0).Type == @Type, 'An error occurred');
+
+
+    assert(found_proposal.at(1).name == @name1, 'An error occurred');
+    assert(found_proposal.at(1).description == @description1, 'An error occurred');
+    assert(found_proposal.at(1).budget == @budget1, 'An error occurred');
+    assert(found_proposal.at(1).amount_avaiable == @amount_avaiable1, 'An error occurred');
+    assert(found_proposal.at(1).Type == @Type1, 'An error occurred');
+
+    assert(found_proposal.at(2).name == @name2, 'An error occurred');
+    assert(found_proposal.at(2).description == @description2, 'An error occurred');
+    assert(found_proposal.at(2).budget == @budget2, 'An error occurred');
+    assert(found_proposal.at(2).amount_avaiable == @amount_avaiable2, 'An error occurred');
+    assert(found_proposal.at(2).Type == @Type2, 'An error occurred');
 }
 
 #[test]
@@ -582,7 +704,6 @@ fn create_proposal_event() {
             Estimated_value,
         );
 
-
     // Assert that the event was emitted with correct data
     spy
         .assert_emitted(
@@ -591,6 +712,8 @@ fn create_proposal_event() {
                     dispatcher.contract_address,
                     Nestnet::Event::ProjectProposal(
                         ProjectProposal {
+                            owner: user,
+                            proposal_id: proposal_id,
                             name: name,
                             description: description,
                             budget: budget,
