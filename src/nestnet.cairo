@@ -12,7 +12,7 @@ pub mod Nestnet {
     #[storage]
     struct Storage {
         owner: ContractAddress,
-        project_proposal: Map<(u64, ContractAddress), ProjectProposal>,
+        owner_proposal: Map<(u64, ContractAddress), ProjectProposal>,
         user: Map<ContractAddress, User>,
         proposal_id: u64,
     }
@@ -68,7 +68,7 @@ pub mod Nestnet {
             let proposal_id = self.proposal_id.read();
             assert(user.isAuthenticated, 'User is not authenticated');
 
-            let create_project_proposal = ProjectProposal {
+            let create_owner_proposal = ProjectProposal {
                 name: name,
                 description: description,
                 budget: budget,
@@ -81,7 +81,7 @@ pub mod Nestnet {
                 size: size,
                 Estimated_value: Estimated_value,
             };
-            self.project_proposal.write((proposal_id, owner), create_project_proposal);
+            self.owner_proposal.write((proposal_id, owner), create_owner_proposal);
 
             self
                 .emit(
@@ -107,7 +107,7 @@ pub mod Nestnet {
         fn get_proposal(
             self: @ContractState, proposer: ContractAddress, proposal_id: u64,
         ) -> ProjectProposal {
-            self.project_proposal.read((proposal_id, proposer))
+            self.owner_proposal.read((proposal_id, proposer))
         }
         fn get_user(self: @ContractState, user: ContractAddress) -> User {
             self.user.read(user)
