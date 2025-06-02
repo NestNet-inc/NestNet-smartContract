@@ -26,3 +26,56 @@ pub struct ProjectProposal {
     pub size: u256,
     pub Estimated_value: u256,
 }
+
+#[derive(Copy, Drop, Serde, PartialEq, starknet::Store)]
+#[allow(starknet::store_no_default_variant)]
+pub enum MilestoneStatus {
+    Pending,
+    InProgress,
+    Completed,
+    Verified,
+    Rejected,
+}
+
+#[derive(Drop, Serde, Copy, starknet::Event, starknet::Store)]
+pub struct Milestone {
+    pub milestone_id: u64,
+    pub proposal_id: u64,
+    pub owner: ContractAddress,
+    pub title: felt252,
+    pub description: felt252,
+    pub target_amount: u256,
+    pub current_amount: u256,
+    pub status: MilestoneStatus,
+    pub deadline: u64,
+    pub completion_proof: felt252,
+    pub verifier: ContractAddress,
+}
+
+#[derive(Drop, Serde, Copy, starknet::Event)]
+pub struct MilestoneStatusUpdated {
+    pub milestone_id: u64,
+    pub proposal_id: u64,
+    pub old_status: MilestoneStatus,
+    pub new_status: MilestoneStatus,
+    pub updated_by: ContractAddress,
+    pub timestamp: u64,
+    pub proof_hash: felt252,
+}
+
+#[derive(Drop, Serde, Copy, starknet::Event)]
+pub struct ProposalCompleted {
+    pub proposal_id: u64,
+    pub owner: ContractAddress,
+    pub total_milestones: u64,
+    pub completed_at: u64,
+}
+
+#[derive(Drop, Serde, Copy, starknet::Event)]
+pub struct FundsReleased {
+    pub milestone_id: u64,
+    pub proposal_id: u64,
+    pub recipient: ContractAddress,
+    pub amount: u256,
+    pub released_at: u64,
+}

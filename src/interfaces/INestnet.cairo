@@ -1,5 +1,5 @@
 use nestnet::nestnet::Nestnet::User;
-use nestnet::types::ProjectProposal;
+use nestnet::types::{Milestone, MilestoneStatus, ProjectProposal};
 use starknet::ContractAddress;
 
 #[starknet::interface]
@@ -19,7 +19,7 @@ pub trait INestnet<TContractState> {
         Estimated_value: u256,
     ) -> u64;
     fn get_all_proposals_by_owner(
-        self: @TContractState, proposer: ContractAddress
+        self: @TContractState, proposer: ContractAddress,
     ) -> Option<Array<ProjectProposal>>;
     fn get_proposal(
         self: @TContractState, proposer: ContractAddress, proposal_id: u64,
@@ -27,8 +27,6 @@ pub trait INestnet<TContractState> {
     fn get_all_owner_proposal(ref self: TContractState);
     fn authenticate_user(ref self: TContractState, user: ContractAddress) -> bool;
     fn get_user(self: @TContractState, user: ContractAddress) -> User;
-    fn milestone(ref self: TContractState);
-    fn milestone_checker(ref self: TContractState);
     fn fund_disposal(ref self: TContractState);
     fn investor_proposal(ref self: TContractState);
     fn get_all_investors_proposal(
@@ -38,5 +36,23 @@ pub trait INestnet<TContractState> {
         amount: u256,
         contract_signature: felt252,
     );
+
+    fn create_milestone(
+        ref self: TContractState,
+        proposal_id: u64,
+        title: felt252,
+        description: felt252,
+        target_amount: u256,
+        deadline: u64,
+    ) -> u64;
+
+    fn milestone_checker(self: @TContractState, milestone_id: u64) -> Option<Milestone>;
+
+    fn update_milestone_status(
+        ref self: TContractState,
+        milestone_id: u64,
+        new_status: MilestoneStatus,
+        completion_proof: felt252,
+    ) -> bool;
 }
 
