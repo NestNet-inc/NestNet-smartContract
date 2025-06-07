@@ -354,13 +354,43 @@ pub mod Nestnet {
             milestone_id
         }
 
-        fn milestone_checker(self: @ContractState, milestone_id: u64) -> Option<Milestone> {
+        fn milestone_checker(self: @ContractState, milestone_id: u64) -> Option<(Milestone, u64, bool)> {
+            // Check if milestone exists
             let milestone = self.milestones.read(milestone_id);
             if milestone.milestone_id == 0 {
-                Option::None
-            } else {
-                Option::Some(milestone)
+                return Option::None;
             }
+
+            // Get proposal milestones to calculate progress
+            let proposal_milestones = self.proposal_milestones.entry(milestone.proposal_id);
+            let mut total_milestones = 0;
+            let mut completed_milestones = 0;
+
+            let mut i = 0;
+            let milestone_count = proposal_milestones.len();
+            while i != milestone_count {
+                let mid = proposal_milestones.at(i).read();
+                let m = self.milestones.read(mid);
+                total_milestones += 1;
+
+                if m.status == MilestoneStatus::Verified || m.status == MilestoneStatus::Completed {
+                    completed_milestones += 1;
+                }
+                i += 1;
+            }
+
+            // Calculate progress percentage (0-100)
+            let progress_percentage = if total_milestones > 0 {
+                (completed_milestones * 100_u64) / total_milestones
+            } else {
+                0_u64
+            };
+
+            // Check if milestone is on track (not past deadline)
+            let current_time = starknet::get_block_timestamp();
+            let is_on_track = current_time <= milestone.deadline;
+
+            Option::Some((milestone, progress_percentage, is_on_track))
         }
 
         fn update_milestone_status(
