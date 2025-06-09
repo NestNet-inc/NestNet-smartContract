@@ -46,7 +46,7 @@ pub trait INestnet<TContractState> {
         deadline: u64,
     ) -> u64;
 
-    fn milestone_checker(self: @TContractState, milestone_id: u64) -> Option<Milestone>;
+    fn milestone_checker(self: @TContractState, milestone_id: u64) -> Option<(Milestone, u64, bool)>;
 
     fn update_milestone_status(
         ref self: TContractState,
